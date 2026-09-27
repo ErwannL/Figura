@@ -17,6 +17,9 @@ same decisions. Every report says it: _Simulation of N modelled personas, not a 
 - **Pricing / conversion** under the target's prices and your alternatives.
 - **Calibration** against real aggregates (suggestions only).
 - **Persona inspector**: timeline, facts, friction, the exact rule behind each decision, screenshots.
+- **Explorer** ([docs/EXPLORATEUR.md](docs/EXPLORATEUR.md)): 1–3 synthetic personas explore the web app on
+  desktop, tablet and mobile at a human pace, screenshot every new screen and report anomalies (JS errors,
+  5xx, NotFound, layout, accessibility, raw i18n keys, slowness, traps) with evidence and a seeded replay.
 
 ## Quick start
 

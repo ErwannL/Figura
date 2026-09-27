@@ -42,6 +42,7 @@ origin, rewrites, catalogue use cases by role + accessible name), `newCredential
 | `worker/explorer/missions.ts`    | Mission catalogue = ids of catalogue use cases (no second way to create a board)      |
 | `worker/explorer/anomalies.ts`   | Anomaly record, severity, dedup key, network redaction                                |
 | `worker/explorer/session.ts`     | One session's loop on a Playwright page                                               |
+| `worker/explorer/shots.ts`       | PNG screenshots (dedup state × device, evidence per anomaly), retention purge         |
 | `worker/explorer/run.ts`         | Sessions, parallelism, progress, report; called by `executeRun`                       |
 | `worker/explorer/report.ts`      | Report assembly (states per device, route map, gallery, anomalies)                    |
 | `ui/views/explore.ts`            | Live progress, anomalies (filters, replay), gallery, JSON export                      |
@@ -101,6 +102,11 @@ checkbox, radio, combobox, textbox, searchbox, switch, option`, deduplicated by 
 
 ## Anomalies
 
+Accessibility checks are the built-in ones below (unnamed buttons/links, images without `alt`,
+small touch targets). `@axe-core/playwright` is not integrated: it would be a new dependency
+injected into every page; the in-page scan covers the same basic rules at no cost. It can be added
+later as an extra detector on new states (serious/critical only).
+
 | Type                  | Severity | Evidence                                     |
 | --------------------- | -------- | -------------------------------------------- |
 | `js-error`            | critical | `pageerror` message + stack head             |
@@ -122,6 +128,22 @@ checkbox, radio, combobox, textbox, searchbox, switch, option`, deduplicated by 
 
 `info` (not anomalies): paywall 402, blocked external navigation, forbidden elements skipped.
 Dedup key: type + normalised route + normalised message (digits → `#`); count and devices merged.
+
+## Tests
+
+- Pure units: device catalogue and caps, forbidden catalogue (each entry has structural cases and
+  ordinary controls pass), fingerprints, strategy and replayability (same seed ⇒ same choices),
+  values, missions, anomaly dedup and redaction, page scan (each DOM detector on a page that has the
+  defect and on one that does not, in happy-dom), guard (`STRIPE_LIVE`).
+- Integration (real Chromium): `worker/explorer/test-helpers/buggy-app.ts` plants a throwing button,
+  a 500 route, a 404 link and a single-page-app NotFound screen, a page too wide for mobile, a raw
+  i18n key, HTML rendered from user input, a slow call, a 401, a 402, a console error and a modal
+  trap, plus a "Delete account" button and an external link: the explorer finds every defect,
+  never clicks the button (server hit count 0), never leaves the origin, and finds nothing on the
+  healthy twin.
+- Worker: two devices in parallel against the fake Orqea (accounts, seed data, screenshots,
+  progress, report without secrets), replay, refusals, cleanup after an exception, on cancel, with
+  residual rows and when the cleanup call fails. API: caps (400) and the one-exploration lock (409).
 
 ## Report (`reports.kind = "explore"`, JSON export `/api/runs/:id/reports/explore.json`)
 

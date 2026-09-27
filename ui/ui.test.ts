@@ -29,6 +29,14 @@ const meta = {
   catalogue: { version: 'c1', useCases: [] },
   weightsVersion: 'w1',
   scenarios: ['baseline'],
+  explorer: {
+    devices: [
+      { key: 'desktop', label: { en: 'Desktop', fr: 'Ordinateur' } },
+      { key: 'mobile', label: { en: 'Mobile', fr: 'Mobile' } },
+    ],
+    caps: { sessions: 3, maxActions: 500, maxMinutes: 30, clumsiness: 0.2 },
+    defaults: { sessions: 1, maxActions: 150, maxMinutes: 10, clumsiness: 0.05 },
+  },
 };
 const event = {
   kind: 'step',
@@ -213,6 +221,20 @@ describe('views', () => {
       fakeScenario: null,
     });
     expect(cfg.seed).toBeUndefined();
+    expect(cfg.explorer).toBeUndefined();
+    (form.elements.namedItem('kind') as HTMLSelectElement).value = 'explore';
+    (form.querySelector('input[name="device"][value="mobile"]') as HTMLInputElement).checked = true;
+    (form.elements.namedItem('sessions') as HTMLSelectElement).value = '3';
+    (form.elements.namedItem('seedData') as HTMLInputElement).checked = true;
+    expect(readForm(form).explorer).toEqual({
+      devices: ['desktop', 'mobile'],
+      sessions: 3,
+      maxActions: 150,
+      maxMinutes: 10,
+      clumsiness: 0.05,
+      seedData: true,
+    });
+    (form.elements.namedItem('kind') as HTMLSelectElement).value = 'journey';
     (form.elements.namedItem('seed') as HTMLInputElement).value = '9';
     (form.elements.namedItem('priceScenarios') as HTMLTextAreaElement).value =
       '[{"name":"x","prices":{"pro":1}}]';
