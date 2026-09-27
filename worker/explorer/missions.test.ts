@@ -3,7 +3,14 @@ import { loadSimData } from '../data.js';
 import { repoRoot } from '../../shared/paths.js';
 import { createPrng } from '../../shared/prng.js';
 import { forbiddenRule } from './forbidden.js';
-import { MISSIONS, SEED_USE_CASES, pickMission, prerequisitesOf, useCase } from './missions.js';
+import {
+  MISSIONS,
+  SEED_USE_CASES,
+  knownIn,
+  pickMission,
+  prerequisitesOf,
+  useCase,
+} from './missions.js';
 import { control } from './test-helpers/controls.js';
 
 const { catalogue } = loadSimData(repoRoot());
@@ -19,6 +26,7 @@ describe('mission catalogue', () => {
       }
     }
     expect(() => useCase(catalogue, 'nope')).toThrow('no use case nope');
+    expect([knownIn(catalogue)('create-board'), knownIn(catalogue)('nope')]).toEqual([true, false]);
   });
 
   it('picks rarely and deterministically', () => {

@@ -1,6 +1,7 @@
 import { claimNext, staleRuns, transition, type RunRow } from '../app/db/runs.js';
 import { executeRun, type WorkerConfig, type WorkerDeps } from './runner.js';
 import { OrqeaClient } from './target/client.js';
+import { purgeExplorerShots } from './explorer/shots.js';
 
 /** Runs abandoned by a dead worker are failed, and their synthetic data cleaned up (best effort). */
 export async function recoverStale(
@@ -48,7 +49,13 @@ export async function workLoop(
   pollMs: number,
 ): Promise<void> {
   await recoverStale(cfg, deps, 600);
+  let purged = 0;
   while (!signal.aborted) {
+    // Explorer screenshot retention, at most hourly.
+    if (Date.now() - purged > 3_600_000) {
+      purgeExplorerShots(cfg.screenshotsDir, cfg.explorerRetentionDays, Date.now());
+      purged = Date.now();
+    }
     const ran = await tick(cfg, deps);
     if (!ran) await new Promise((r) => setTimeout(r, pollMs));
   }

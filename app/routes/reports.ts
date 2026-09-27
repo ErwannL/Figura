@@ -11,8 +11,10 @@ import type { Db } from '../db/pool.js';
 import { audit, getReport, saveCalibration, saveReport } from '../db/misc.js';
 import { REPORT_CSP } from '../security.js';
 
-const KINDS = new Set(['funnel', 'load', 'pricing', 'calibration']);
+const KINDS = new Set(['funnel', 'load', 'pricing', 'calibration', 'explore']);
 const FILE = /^[A-Za-z0-9_-]+\.jpg$/;
+/** Screenshots served to the UI: journey JPEGs and explorer PNGs. */
+const SHOT = /^[A-Za-z0-9_-]+\.(jpg|png)$/;
 const RUN = /^[0-9a-z]+$/;
 
 function reportHelpers(cfg: AppConfig) {
@@ -59,7 +61,12 @@ function reportRoutes1(app: FastifyInstance, cfg: AppConfig, db: Db, h: H): void
   app.get('/api/runs/:id/reports/:kind', async (req, reply) => {
     const { id, kind } = req.params as { id: string; kind: string };
     const [name, format = 'json'] = kind.split('.') as [string, string | undefined];
-    if (!KINDS.has(name) || !['json', 'html'].includes(format))
+    // The explorer report is JSON (the UI renders it); there is no HTML export of it.
+    if (
+      !KINDS.has(name) ||
+      !['json', 'html'].includes(format) ||
+      (name === 'explore' && format === 'html')
+    )
       return reply.code(404).send({ error: 'NOT_FOUND' });
     const report = await getReport<AnyReport>(db, id, name);
     if (!report) return reply.code(404).send({ error: 'NOT_FOUND' });
@@ -69,9 +76,9 @@ function reportRoutes1(app: FastifyInstance, cfg: AppConfig, db: Db, h: H): void
   app.get('/api/runs/:id/screenshots/:file', async (req, reply) => {
     const { id, file } = req.params as { id: string; file: string };
     const path = join(cfg.screenshotsDir, id, file);
-    if (!RUN.test(id) || !FILE.test(file) || !existsSync(path))
+    if (!RUN.test(id) || !SHOT.test(file) || !existsSync(path))
       return reply.code(404).send({ error: 'NOT_FOUND' });
-    return reply.type('image/jpeg').send(readFileSync(path));
+    return reply.type(file.endsWith('.png') ? 'image/png' : 'image/jpeg').send(readFileSync(path));
   });
 
   app.post('/api/runs/:id/calibration', async (req, reply) => {

@@ -32,6 +32,11 @@ export function useCase(catalogue: Catalogue, id: string): UseCase {
   return uc;
 }
 
+/** Whether the catalogue has a use case (what the replayer asks of Vigie feature ids). */
+export function knownIn(catalogue: Catalogue): (id: string) => boolean {
+  return (id) => catalogue.useCases.some((u) => u.id === id);
+}
+
 /** A mission for this step, or null for a free action. */
 export function pickMission(prng: Prng): MissionId | null {
   return prng.chance(MISSION_RATE) ? prng.pick(MISSIONS) : null;
