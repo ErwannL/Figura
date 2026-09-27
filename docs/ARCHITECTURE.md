@@ -26,6 +26,9 @@
    → frustration → `decide()`; paywalls → `decideMoney()`. Events are written in batches; persona
    memory (credentials encrypted) is saved after each session. A background poll reads the cancel
    flag and writes a heartbeat.
+   Explorer runs (`kind: explore`, [EXPLORATEUR.md](EXPLORATEUR.md)) instead run 1–3 exploring
+   sessions in parallel (one browser context per device profile) and write live progress to
+   `runs.progress`; their `explore` report is saved before cleanup and again with its outcome.
 4. `reporting`: funnel, load, pricing reports built from persisted events and memories.
 5. `cleaning` (always, in `finally`): `POST /api/admin/synthetic/cleanup`; residual rows ⇒ `failed`.
 6. `done | failed | cancelled`. A/B comparisons and calibrations are computed on demand from stored

@@ -47,6 +47,7 @@ export function workerConfigFromEnv(env: Env): {
       targets: parseTargets(env.FIGURA_TARGETS),
       readyTimeoutMs: Number(env.FIGURA_READY_TIMEOUT_MS ?? 120_000),
       readyPollMs: 2000,
+      explorerRetentionDays: Number(env.FIGURA_EXPLORER_RETENTION_DAYS ?? 14),
     },
     databaseUrl,
     pollMs: Number(env.FIGURA_POLL_MS ?? 2000),

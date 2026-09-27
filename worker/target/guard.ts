@@ -14,6 +14,7 @@ export type RefusalCode =
   | 'SYNTHETIC_DISABLED'
   | 'VOLUME_CAP'
   | 'TARGET_NOT_CONFIGURED'
+  | 'STRIPE_LIVE'
   | `ORQEA_CONTRACT_MISSING:${string}`;
 
 /** Sentences shown verbatim in the UI next to the code. */
@@ -28,6 +29,8 @@ export const REFUSAL_MESSAGES = {
     'This run would exceed the configured volume caps (accounts, requests per second or rows). Lower the number of users.',
   TARGET_NOT_CONFIGURED:
     'The Orqea environment named by the run (or by the admin console) is not configured in FIGURA_TARGETS on this Figura. Add it, or pick a configured target.',
+  STRIPE_LIVE:
+    'The target reports live Stripe payments. Explorer runs only run against a target in Stripe test mode (or without Stripe), and this cannot be overridden.',
   ORQEA_CONTRACT_MISSING:
     'The target does not implement a required endpoint of the Orqea contract (see docs/ORQEA_CONTRACT.md).',
 } as const;
@@ -61,6 +64,8 @@ export interface GuardInput {
   productionHosts: string[];
   requested: { accounts: number; requestsPerSecond: number; rows: number };
   caps: { accounts: number; requestsPerSecond: number; rows: number };
+  /** Explorer runs: a target in live Stripe mode is refused (STRIPE_LIVE), with no override. */
+  refuseLiveStripe?: boolean;
 }
 
 export type GuardResult =
@@ -94,6 +99,7 @@ export async function guardTarget(
     info = await client.targetInfo();
     if (!SAFE_ENVS.test(info.env)) return refuse('PRODUCTION_ENV');
     if (!info.syntheticEnabled) return refuse('SYNTHETIC_DISABLED');
+    if (input.refuseLiveStripe && info.stripeMode === 'live') return refuse('STRIPE_LIVE');
     endpoints = await client.endpoints();
     plans = await client.plans();
   } catch (e) {

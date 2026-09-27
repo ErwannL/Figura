@@ -76,7 +76,8 @@ export function breached(step: VigieStep, r: Pick<ReplayStep, 'ok' | 'durationMs
 /** A step got no HTTP response at all: the target is down or still starting. */
 class Unreachable extends Error {}
 
-class Replayer {
+/** Account setup and use cases for one persona, step by step (also the explorer's). */
+export class Replayer {
   private vars: Record<string, string>;
   private done = new Set<string>();
   private n = 0;
@@ -85,7 +86,7 @@ class Replayer {
     private readonly runId: string,
     private readonly persona: Persona,
     private readonly driver: Driver,
-    private readonly deps: ReplayDeps,
+    private readonly deps: Omit<ReplayDeps, 'openDriver'>,
     private readonly creds: { email: string; password: string },
     private readonly known: (id: string) => boolean,
   ) {

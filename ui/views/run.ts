@@ -3,6 +3,7 @@ import type { Ctx } from '../context.js';
 import { h, table } from '../dom.js';
 import type { PublicRun, UiEvent } from '../types.js';
 import { targetLabel } from './runs.js';
+import { exploreSection } from './explore.js';
 
 const REPORTS = ['funnel', 'load', 'pricing', 'calibration'] as const;
 const FINAL = ['done', 'failed', 'refused', 'cancelled'];
@@ -130,6 +131,7 @@ export async function runView(ctx: Ctx, id: string): Promise<HTMLElement> {
       note: string | null;
     }[];
   }>(`/api/runs/${id}`);
+  const explore = run.kind === 'explore' ? await exploreSection(ctx, run) : null;
   const personaSelect = h(doc, 'select', {
     'aria-label': t('inspector.persona'),
   }) as HTMLSelectElement;
@@ -179,6 +181,7 @@ export async function runView(ctx: Ctx, id: string): Promise<HTMLElement> {
       : null,
     run.error ? h(doc, 'p', { role: 'alert' }, `${t('run.error')}: ${run.error}`) : null,
     actions,
+    explore,
     h(doc, 'h2', {}, t('run.transitions')),
     table(
       doc,

@@ -20,6 +20,8 @@ export interface RunRow {
   refusal_message: string | null;
   error: string | null;
   summary: Record<string, unknown> | null;
+  /** Explorer runs: live progress (states, anomalies, last screenshot), written while running. */
+  progress: Record<string, unknown> | null;
   cancel_requested: boolean;
   created_by: string;
   created_at: Date;
@@ -29,22 +31,27 @@ export interface RunRow {
 
 const fromRow = (r: RunRow): RunRow => ({ ...r, seed: Number(r.seed) });
 
+/**
+ * Creates a draft run. Null when a unique index refuses it: an exploration of the same target is
+ * already active (migration 004).
+ */
 export async function createRun(
   db: Db,
   id: string,
   config: RunConfig,
   seed: number,
   actor: string,
-): Promise<RunRow> {
+): Promise<RunRow | null> {
   const { rows } = await db.query<RunRow>(
-    `insert into runs (id, kind, status, seed, config, target_url, created_by) values ($1, $2, 'draft', $3, $4, $5, $6) returning *`,
+    `insert into runs (id, kind, status, seed, config, target_url, created_by) values ($1, $2, 'draft', $3, $4, $5, $6) on conflict do nothing returning *`,
     [id, config.kind, seed, config, config.targetUrl, actor],
   );
+  if (!rows[0]) return null;
   await db.query(
     `insert into run_transitions (run_id, from_status, to_status, actor, note) values ($1, null, 'draft', $2, 'created')`,
     [id, actor],
   );
-  return fromRow(rows[0] as RunRow);
+  return fromRow(rows[0]);
 }
 
 export async function getRun(db: Db, id: string): Promise<RunRow | null> {
@@ -141,6 +148,17 @@ export async function isCancelRequested(db: Db, id: string): Promise<boolean> {
     [id],
   );
   return rows[0]?.cancel_requested === true;
+}
+
+export async function setProgress(
+  db: Db,
+  id: string,
+  progress: Record<string, unknown>,
+): Promise<void> {
+  await db.query('update runs set progress = $2, heartbeat_at = now() where id = $1', [
+    id,
+    progress,
+  ]);
 }
 
 export async function heartbeat(db: Db, id: string): Promise<void> {

@@ -1,4 +1,12 @@
-import type { Browser, BrowserContext, Locator, Page, Response, Route } from 'playwright';
+import type {
+  Browser,
+  BrowserContext,
+  BrowserContextOptions,
+  Locator,
+  Page,
+  Response,
+  Route,
+} from 'playwright';
 import { join } from 'node:path';
 import { emptyFacts, mergeFacts, type Facts } from '../../shared/facts.js';
 import type { UiStep, UiTarget, UseCase } from '../../shared/catalogue-schema.js';
@@ -21,6 +29,8 @@ export interface BrowserDriverOptions {
   screenshotDir: string | null;
   stepTimeoutMs: number;
   commonUi: CommonUi;
+  /** Explorer devices: a Playwright device profile or viewport, over the persona's defaults. */
+  context?: BrowserContextOptions;
 }
 
 /**
@@ -90,6 +100,7 @@ export class BrowserDriver implements Driver {
       locale: persona.locale === 'fr' ? 'fr-FR' : 'en-GB',
       timezoneId: persona.timezone,
       reducedMotion: 'reduce',
+      ...opts.context,
     });
     const page = await context.newPage();
     page.setDefaultTimeout(opts.stepTimeoutMs);
@@ -384,6 +395,11 @@ export class BrowserDriver implements Driver {
       quality: 50,
     });
     return file;
+  }
+
+  /** The persona's page, for the explorer that continues where a use case left it. */
+  get currentPage(): Page {
+    return this.page;
   }
 
   async close(): Promise<void> {

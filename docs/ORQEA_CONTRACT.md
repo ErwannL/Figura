@@ -95,6 +95,7 @@ Figura fails the run when `residualRows > 0`. `400` without a valid selector.
 | `VOLUME_CAP`                           | accounts / requests per second / estimated rows above `FIGURA_MAX_*`                                                              | lower the run        |
 | `ORQEA_CONTRACT_MISSING:<METHOD path>` | `GET /api` does not describe register, login or plans; or the target, `GET /api` or plans call fails or is malformed              | implement it         |
 | `TARGET_NOT_CONFIGURED`                | the run (or the console's `target` claim) names an Orqea environment absent from `FIGURA_TARGETS`                                 | configure it         |
+| `STRIPE_LIVE`                          | explorer runs only ([EXPLORATEUR.md](EXPLORATEUR.md)): `stripeMode` is `live`                                                     | **none**             |
 
 `REMOTE_HOST_UNCONFIRMED` and `PRODUCTION_ENV` apply to **every** host the run reaches: the API, the
 web app and the destinations of browser rewrites (`confirmHost` may list several, comma separated).
@@ -136,7 +137,14 @@ says "open me from the Orqea admin console".
 **Loopback lock:** Figura answers **404** to any request whose `Host` is not local. Set
 `FIGURA_LOOPBACK_ONLY=false` only behind a reverse proxy that authenticates admins itself.
 
-## 6. Fake-only extension
+## 6. Explorer runs
+
+Explorer runs use only what is above (target, verification, cleanup, run header). What they would
+need from Orqea but Figura does not work around is listed in
+[EXPLORATEUR.md](EXPLORATEUR.md#requests-to-orqea--demandes-à-orqea-) (plan without Stripe, seeding API,
+structural hooks on dangerous controls).
+
+## 7. Fake-only extension
 
 `PUT /__control/scenario/:runId {preset?, …overrides}` (same auth as §3) selects a friction
 scenario for one run. Orqea does not need it; Figura calls it only when a run sets `fakeScenario`.
