@@ -136,6 +136,23 @@ describe('guardTarget', () => {
       ).ok,
     ).toBe(true);
   });
+  it('STRIPE_LIVE for explorer runs, with no override; other runs are unaffected', async () => {
+    const live = stub({ stripeMode: 'live' });
+    expect(await guardTarget(input({ refuseLiveStripe: true }), live)).toEqual({
+      ok: false,
+      code: 'STRIPE_LIVE',
+      message: REFUSAL_MESSAGES.STRIPE_LIVE,
+    });
+    expect((await guardTarget(input({ refuseLiveStripe: true }), stub())).ok).toBe(true);
+    expect((await guardTarget(input(), live)).ok).toBe(true);
+    // Production still wins over everything, including the Stripe check.
+    expect(
+      await guardTarget(
+        input({ refuseLiveStripe: true }),
+        stub({ env: 'production', stripeMode: 'live' }),
+      ),
+    ).toMatchObject({ code: 'PRODUCTION_ENV' });
+  });
   it('SYNTHETIC_DISABLED, VOLUME_CAP, contract gaps', async () => {
     expect(await guardTarget(input(), stub({ syntheticEnabled: false }))).toMatchObject({
       code: 'SYNTHETIC_DISABLED',
