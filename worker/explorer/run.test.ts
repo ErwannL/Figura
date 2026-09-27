@@ -205,14 +205,16 @@ describe('explorer runs (worker)', () => {
     expect(report.anomalies[0]).toMatchObject({ type: 'cleanup-residual', message: done.error });
   });
 
-  it('a session whose account setup fails ends with an error, the run still reports', async () => {
+  it('when every session fails its account setup the run fails, and still reports', async () => {
     const done = await executeRun(
       await queued('ex8', {}, { fakeScenario: 'unclear-signup' }),
       cfg,
       deps(),
     );
     const report = (await getReport<ExploreReport>(db, 'ex8', 'explore'))!;
-    expect(done.status, `${done.error}`).toBe('done');
+    // A run that explored nothing is not "done": the target could not even be signed up on.
+    expect(done.status).toBe('failed');
+    expect(done.error).toMatch(/^every session failed: setup: /);
     expect(report.sessions[0]).toMatchObject({ stoppedBy: 'error', steps: 0 });
     expect(report.sessions[0]!.error).toMatch(/^setup: /);
   });

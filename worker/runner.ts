@@ -220,6 +220,9 @@ async function exploreAndFinish(
     const r = await exploreRun(run, cfg, deps, prepared);
     report = r.report;
     cancelled = r.cancelled;
+    // Nothing explored at all is not a result: a target the sessions cannot even sign up on.
+    if (!cancelled && r.report.sessions.every((s) => s.stoppedBy === 'error'))
+      error = `every session failed: ${r.report.sessions.map((s) => s.error).join('; ')}`;
     summary.explore = {
       states: r.report.sessions.reduce((n, s) => n + s.states, 0),
       anomalies: r.report.anomalies.length,
