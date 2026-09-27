@@ -6,6 +6,12 @@ import { applyTarget, publicTargets } from '../../shared/targets.js';
 import { purgeScreenshots } from '../../worker/runner.js';
 import type { SimData } from '../../worker/data.js';
 import { PRESETS } from '../../fake-orqea/scenario.js';
+import {
+  DEVICE_KEYS,
+  EXPLORER_CAPS,
+  EXPLORER_DEFAULTS,
+  EXPLORER_DEVICES,
+} from '../../shared/explorer.js';
 import type { AppConfig } from '../config.js';
 import type { Db } from '../db/pool.js';
 import { eventsOf } from '../db/events.js';
@@ -39,6 +45,7 @@ export function publicRun(r: RunRow) {
     refusalMessage: r.refusal_message,
     error: r.error,
     summary: r.summary,
+    progress: r.progress,
     createdBy: r.created_by,
     createdAt: r.created_at,
     startedAt: r.started_at,
@@ -79,6 +86,11 @@ function runRoutes1(app: FastifyInstance, cfg: AppConfig, db: Db, data: SimData)
     },
     weightsVersion: data.weights.version,
     scenarios: Object.keys(PRESETS),
+    explorer: {
+      devices: DEVICE_KEYS.map((key) => ({ key, label: EXPLORER_DEVICES[key].label })),
+      caps: EXPLORER_CAPS,
+      defaults: EXPLORER_DEFAULTS,
+    },
   }));
 
   app.get('/api/runs', async () => ({
@@ -106,7 +118,9 @@ function runRoutes1(app: FastifyInstance, cfg: AppConfig, db: Db, data: SimData)
         .send({ error: 'INVALID_CONFIG', issues: [`personaIds: unknown ${unknown.join(', ')}`] });
     const seed = config.seed ?? randomInt(0, 2 ** 31);
     const id = base36Id();
-    await createRun(db, id, config, seed, req.operator);
+    // One active exploration per target (partial unique index, migration 004).
+    if (!(await createRun(db, id, config, seed, req.operator)))
+      return reply.code(409).send({ error: 'EXPLORATION_ACTIVE' });
     const run = await transition(db, id, 'queued', req.operator, 'queued from UI');
     await audit(db, req.operator, 'run.create', {
       id,

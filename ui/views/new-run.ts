@@ -2,6 +2,7 @@ import type { Ctx } from '../context.js';
 import { h } from '../dom.js';
 import { ApiError } from '../api.js';
 import type { Me, Meta } from '../types.js';
+import { explorerFields, readExplorer } from './explore.js';
 
 function field(ctx: Ctx, label: string, control: HTMLElement): HTMLElement {
   return h(ctx.doc, 'label', {}, h(ctx.doc, 'span', {}, label), control);
@@ -32,6 +33,7 @@ export function readForm(form: HTMLFormElement): Record<string, unknown> {
   if (target) config.target = target;
   if (v('seed')) config.seed = Number(v('seed'));
   if (v('priceScenarios')) config.priceScenarios = JSON.parse(v('priceScenarios'));
+  if (config.kind === 'explore') config.explorer = readExplorer(form);
   return config;
 }
 
@@ -96,6 +98,7 @@ export async function newRunView(ctx: Ctx): Promise<HTMLElement> {
         { name: 'kind' },
         h(doc, 'option', { value: 'journey' }, t('kind.journey')),
         h(doc, 'option', { value: 'volume' }, t('kind.volume')),
+        h(doc, 'option', { value: 'explore' }, t('kind.explore')),
       ),
     ),
     field(ctx, t('form.target'), picker.select),
@@ -134,6 +137,7 @@ export async function newRunView(ctx: Ctx): Promise<HTMLElement> {
     ),
     field(ctx, t('form.allowCheckout'), input('allowCheckout', '', 'checkbox')),
     field(ctx, t('form.priceScenarios'), h(doc, 'textarea', { name: 'priceScenarios', rows: '3' })),
+    explorerFields(ctx, meta),
     alert,
     h(doc, 'button', { type: 'submit' }, t('form.submit')),
   ) as HTMLFormElement;

@@ -41,6 +41,7 @@ const cfg: WorkerConfig = {
   targets: {},
   readyTimeoutMs: 5000,
   readyPollMs: 50,
+  explorerRetentionDays: 14,
 };
 beforeAll(async () => {
   browser = await chromium.launch({ headless: true });

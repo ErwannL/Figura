@@ -115,3 +115,21 @@ button {
     animation: none !important;
   }
 }
+
+/* Explorer gallery: one route per figure, its devices side by side. */
+.gallery figure {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+.gallery figcaption {
+  flex-basis: 100%;
+  font-family: monospace;
+}
+.gallery img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #ccc;
+}

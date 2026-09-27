@@ -5,6 +5,12 @@
   Remote hosts need `allowRemote` + the host retyped. Refused runs never call the target.
   Every host a run reaches is checked (API, web app, browser rewrite destinations); rewrites and
   named targets come only from server configuration (`FIGURA_TARGETS`), never from the run request.
+- **Explorer runs** ([EXPLORATEUR.md](EXPLORATEUR.md)): also refused on `stripeMode: live` (`STRIPE_LIVE`,
+  no override); at most 3 sessions, 500 actions and 30 minutes per session (schema, server side); a
+  catalogue of forbidden controls (logout, account deletion, export, credentials, encryption, payment,
+  OAuth, SSH, non-synthetic invitations, other origins) never activated; navigations leaving the
+  origin cancelled; stored excerpts redacted (run header, JWTs, bearer, secret query values) and
+  URLs stored without query; one active exploration per target (409).
 - **Run header scope**: the persona's browser sends `X-Synthetic-Run` only to Orqea's API origin
   (per request, fresh HMAC); the web app and third parties never see it. The SSO `target` claim is
   signed and validated (`BAD_TARGET`); an unknown name cannot widen what a run may reach.

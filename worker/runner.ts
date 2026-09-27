@@ -25,7 +25,16 @@ import {
   selectPersonas,
 } from './modes.js';
 import { replayScenario } from './replay.js';
-import { OrqeaClient, type Endpoint, type TargetInfo } from './target/client.js';
+import { exploreRun } from './explorer/run.js';
+import { withCleanup, type ExploreReport } from './explorer/report.js';
+import { planSessions, type ExplorerConfig } from '../shared/explorer.js';
+import { saveReport } from '../app/db/misc.js';
+import {
+  OrqeaClient,
+  type CleanupResult,
+  type Endpoint,
+  type TargetInfo,
+} from './target/client.js';
 import { checkDrift, type DriftReport } from './target/drift.js';
 import { guardTarget, REFUSAL_MESSAGES } from './target/guard.js';
 import { waitReady } from './target/ready.js';
@@ -47,6 +56,10 @@ export interface WorkerConfig {
   /** Browser runs wait this long for the web app and API to answer (FIGURA_READY_TIMEOUT_MS). */
   readyTimeoutMs: number;
   readyPollMs: number;
+  /** Explorer screenshots older than this are purged by the work loop (FIGURA_EXPLORER_RETENTION_DAYS). */
+  explorerRetentionDays: number;
+  /** Pause between explorer actions; tests shorten it (the default is the human 400–2 500 ms). */
+  explorerPause?: { min: number; max: number };
 }
 
 export interface WorkerDeps {
@@ -80,9 +93,11 @@ async function prepare(
   const accounts =
     c.kind === 'replay'
       ? 1
-      : c.kind === 'journey'
-        ? personas.length
-        : clonesOf(personas, c.targetUsers).length;
+      : c.kind === 'explore'
+        ? planSessions(c.explorer as ExplorerConfig).length
+        : c.kind === 'journey'
+          ? personas.length
+          : clonesOf(personas, c.targetUsers).length;
   const guard = await guardTarget(
     {
       targetUrl: target.api,
@@ -97,6 +112,7 @@ async function prepare(
         rows: accounts * cfg.rowsPerAccount,
       },
       caps: cfg.caps,
+      refuseLiveStripe: c.kind === 'explore',
     },
     client,
   );
@@ -154,6 +170,7 @@ export async function executeRun(
   }
   const prepared = await prepare(run, cfg, deps, client, target);
   if (!prepared) return run;
+  if (run.config.kind === 'explore') return exploreAndFinish(run, cfg, deps, prepared);
   let error: string | null = null;
   let summary: Record<string, unknown> = { drift: prepared.drift };
   let cancelled = false;
@@ -184,6 +201,39 @@ export async function executeRun(
     error = (e as Error).message;
   }
   return finish(run, cfg, deps, prepared.client, { error, summary, cancelled });
+}
+
+/** Explorer run; cleanup always runs, and its outcome goes into the report. */
+async function exploreAndFinish(
+  run: RunRow,
+  cfg: WorkerConfig,
+  deps: WorkerDeps,
+  prepared: Prepared,
+): Promise<RunRow> {
+  let error: string | null = null;
+  let cancelled = false;
+  let report: ExploreReport | null = null;
+  const summary: Record<string, unknown> = { drift: prepared.drift };
+  try {
+    if (run.config.fakeScenario !== null)
+      await prepared.client.setScenario(run.config.fakeScenario);
+    const r = await exploreRun(run, cfg, deps, prepared);
+    report = r.report;
+    cancelled = r.cancelled;
+    summary.explore = {
+      states: r.report.sessions.reduce((n, s) => n + s.states, 0),
+      anomalies: r.report.anomalies.length,
+      screenshots: r.report.screenshots.length,
+    };
+  } catch (e) {
+    error = (e as Error).message;
+  }
+  const final = await finish(run, cfg, deps, prepared.client, { error, summary, cancelled });
+  if (report) {
+    const cleanup = (final.summary?.cleanup as CleanupResult | undefined) ?? null;
+    await saveReport(deps.db, run.id, 'explore', withCleanup(report, cleanup, final.error));
+  }
+  return final;
 }
 
 /** A Vigie scenario, one persona, step by step in a browser (docs/VIGIE.md). */

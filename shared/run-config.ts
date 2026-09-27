@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { explorerConfigSchema } from './explorer.js';
 import { TARGET_NAME } from './targets.js';
 import { vigieScenarioSchema } from './vigie.js';
 
@@ -34,8 +35,10 @@ export const TRANSITIONS: Record<RunStatus, RunStatus[]> = {
 export const runConfigSchema = z
   .object({
     /** `replay`: a Vigie scenario replayed step by step by one persona (docs/VIGIE.md). */
-    kind: z.enum(['journey', 'volume', 'replay']),
+    /** `explore`: personas explore the web app on several devices (docs/EXPLORATEUR.md). */
+    kind: z.enum(['journey', 'volume', 'replay', 'explore']),
     replay: vigieScenarioSchema.nullable().default(null),
+    explorer: explorerConfigSchema.nullable().default(null),
     label: z.string().max(120).default(''),
     /** Named target (FIGURA_TARGETS); when set, the server fills targetUrl/webUrl from it. */
     target: z.string().regex(TARGET_NAME).nullable().default(null),
@@ -71,7 +74,12 @@ export const runConfigSchema = z
       .default([]),
     userScenarios: z.array(z.number().int().min(1)).default([100, 1000, 10000]),
   })
-  .strict();
+  .strict()
+  // An explore run always carries its (defaulted) explorer parameters; other kinds never do.
+  .transform((c) => ({
+    ...c,
+    explorer: c.kind === 'explore' ? (c.explorer ?? explorerConfigSchema.parse({})) : null,
+  }));
 
 export type RunConfig = z.infer<typeof runConfigSchema>;
 export type RunConfigInput = z.input<typeof runConfigSchema>;

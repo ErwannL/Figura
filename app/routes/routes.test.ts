@@ -164,3 +164,63 @@ describe('reports API', () => {
     await transition(h.db, a, 'cancelled', 'ops').catch(() => undefined);
   });
 });
+
+describe('explorer runs (API)', () => {
+  const explore = { kind: 'explore', targetUrl: 'http://localhost:4100' };
+  it('caps are enforced server-side; one active exploration per target (409)', async () => {
+    h = await makeApp();
+    const c = await h.login();
+    const meta = await h.api('GET', '/api/meta', c);
+    expect(meta.json.explorer).toMatchObject({
+      devices: [{ key: 'desktop' }, { key: 'tablet' }, { key: 'mobile' }],
+      caps: { sessions: 3, maxActions: 500, maxMinutes: 30 },
+    });
+    for (const bad of [{ sessions: 4 }, { maxActions: 501 }, { maxMinutes: 31 }, { devices: [] }]) {
+      const r = await h.api('POST', '/api/runs', c, { config: { ...explore, explorer: bad } });
+      expect(r.status, JSON.stringify(bad)).toBe(400);
+    }
+    const first = await h.api('POST', '/api/runs', c, { config: explore });
+    expect(first.status).toBe(201);
+    expect((first.json.run as { config: { explorer: object } }).config.explorer).toMatchObject({
+      maxActions: 150,
+      maxMinutes: 10,
+    });
+    const second = await h.api('POST', '/api/runs', c, { config: explore });
+    expect(second).toMatchObject({ status: 409, json: { error: 'EXPLORATION_ACTIVE' } });
+    // Another target, or another kind on the same target, is not blocked.
+    expect(
+      (
+        await h.api('POST', '/api/runs', c, {
+          config: { ...explore, targetUrl: 'http://127.0.0.1:4100' },
+        })
+      ).status,
+    ).toBe(201);
+    expect((await h.api('POST', '/api/runs', c, { config: cfg })).status).toBe(201);
+    // Once the first one is over, a new exploration of that target may start.
+    const id = (first.json.run as { id: string }).id;
+    await h.api('POST', `/api/runs/${id}/cancel`, c);
+    expect((await h.api('POST', '/api/runs', c, { config: explore })).status).toBe(201);
+  });
+
+  it('serves explorer PNG screenshots and the JSON report (no HTML export)', async () => {
+    h = await makeApp();
+    const c = await h.login();
+    const id = (
+      (await h.api('POST', '/api/runs', c, { config: explore })).json.run as { id: string }
+    ).id;
+    mkdirSync(join(h.cfg.screenshotsDir, id));
+    writeFileSync(
+      join(h.cfg.screenshotsDir, id, 'x-desktop-0-0001-state.png'),
+      Buffer.from([0x89, 0x50]),
+    );
+    const png = await h.api('GET', `/api/runs/${id}/screenshots/x-desktop-0-0001-state.png`, c);
+    expect(png.headers['content-type']).toBe('image/png');
+    await saveReport(h.db, id, 'explore', { type: 'explore', runId: id });
+    const json = await h.api('GET', `/api/runs/${id}/reports/explore.json`, c);
+    expect(json.json).toEqual({ type: 'explore', runId: id });
+    expect(json.headers['content-disposition']).toContain(`figura-${id}-explore.json`);
+    expect((await h.api('GET', `/api/runs/${id}/reports/explore.html`, c)).status).toBe(404);
+    const run = await h.api('GET', `/api/runs/${id}`, c);
+    expect((run.json.run as { progress: unknown }).progress).toBeNull();
+  });
+});

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TEST_DB_URL } from '../app/test-helpers/db.js';
+import { TEST_DB_URL, testDb } from '../app/test-helpers/db.js';
 import { start, workerConfigFromEnv, workerDeps } from './start.js';
 import { repoRoot } from '../shared/paths.js';
 import type { Db } from '../app/db/pool.js';
@@ -15,6 +15,7 @@ describe('worker start', () => {
     expect(c.cfg.caps).toEqual({ accounts: 500, requestsPerSecond: 20, rows: 100000 });
     expect(c.cfg.localHosts).toEqual([]);
     expect(c.cfg.targets).toEqual({});
+    expect(c.cfg.explorerRetentionDays).toBe(14);
     expect(
       workerConfigFromEnv({ ...env, FIGURA_TARGETS: '{"local":{"api":"http://backend:5001"}}' }).cfg
         .targets,
@@ -65,6 +66,8 @@ describe('worker start', () => {
     await b.close();
   });
   it('migrates and loops until aborted', async () => {
+    // An empty database: runs other test files left queued must not be claimed here.
+    await (await testDb()).end();
     const ac = new AbortController();
     const p = start({ ...env, FIGURA_POLL_MS: '10' }, ac.signal);
     await new Promise((r) => setTimeout(r, 300));

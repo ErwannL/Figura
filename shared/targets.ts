@@ -81,7 +81,7 @@ export function applyTarget(raw: unknown, targets: Targets): { config: unknown }
     issues: [`target: "${c.target as string}" ${why}`],
   });
   if (!spec) return refuse('is not configured in FIGURA_TARGETS');
-  if ((c.kind === 'journey' || c.kind === 'replay') && !spec.web)
+  if (['journey', 'replay', 'explore'].includes(c.kind as string) && !spec.web)
     return refuse('has no web URL in FIGURA_TARGETS; journey runs drive the web app');
   return { config: { ...c, targetUrl: spec.api, webUrl: spec.web ?? null } };
 }
