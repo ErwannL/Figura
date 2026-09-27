@@ -167,10 +167,14 @@ describe('loopback lock and headers', () => {
       });
       expect(r.statusCode, url).toBe(404);
     }
-    expect(
-      (await h!.app.inject({ method: 'GET', url: '/health', headers: { host: '127.0.0.1:4000' } }))
-        .statusCode,
-    ).toBe(200);
+    const health = await h!.app.inject({
+      method: 'GET',
+      url: '/health',
+      headers: { host: '127.0.0.1:4000' },
+    });
+    expect(health.statusCode).toBe(200);
+    // The link of « Back to Orqea » is public: the UI learns it here.
+    expect(health.json()).toEqual({ ok: true, orqeaUrl: 'https://orqea.dev' });
   });
 
   it('can be unlocked behind an authenticating reverse proxy', async () => {

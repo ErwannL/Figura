@@ -23,6 +23,8 @@ export interface AppConfig {
    * characters, which closes every /api/vigie/* route (401).
    */
   vigieSecret: string | null;
+  /** Public link of the « Back to Orqea » button (`FIGURA_ORQEA_URL`), exposed on /health. */
+  orqeaUrl: string;
 }
 
 function secret(env: Env, key: string): string {
@@ -51,6 +53,9 @@ export function appConfigFromEnv(env: Env, defaults: { uiDir: string }): AppConf
     if (!/^https?:\/\/[a-z0-9.-]+(:\d+)?$/i.test(o))
       throw new Error(`FIGURA_CONSOLE_ORIGINS: invalid origin ${o}`);
   }
+  const orqeaUrl = env.FIGURA_ORQEA_URL ?? 'https://orqea.dev';
+  if (!/^https?:\/\/[^\s]+$/i.test(orqeaUrl))
+    throw new Error('FIGURA_ORQEA_URL must be an http(s) URL');
   return {
     databaseUrl,
     sessionSecret,
@@ -67,5 +72,6 @@ export function appConfigFromEnv(env: Env, defaults: { uiDir: string }): AppConf
     maxRunsListed: 200,
     targets: parseTargets(env.FIGURA_TARGETS),
     vigieSecret,
+    orqeaUrl,
   };
 }

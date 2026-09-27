@@ -2,6 +2,15 @@ import type { I18nKey, Locale } from '../shared/i18n.js';
 import { apiClient, type Fetch } from './api.js';
 import { makeT, type Ctx } from './context.js';
 import { h } from './dom.js';
+import {
+  backToOrqea,
+  brandedPage,
+  credits,
+  DEFAULT_ORQEA_URL,
+  fetchOrqeaUrl,
+  loader,
+  logo,
+} from './brand.js';
 import { bootstrapSession } from './sso.js';
 import { compareView } from './views/compare.js';
 import { newRunView } from './views/new-run.js';
@@ -22,17 +31,28 @@ export function initialLocale(win: Window): Locale {
   return wanted === 'fr' ? 'fr' : 'en';
 }
 
-export async function route(ctx: Ctx, path: string): Promise<HTMLElement> {
+/** Unknown route ⇒ the branded 404 (never a silent fallback to another page). */
+export async function route(
+  ctx: Ctx,
+  path: string,
+  orqeaUrl: string = DEFAULT_ORQEA_URL,
+): Promise<HTMLElement> {
   const run = /^\/runs\/([0-9a-z]+)$/.exec(path);
   if (run) return runView(ctx, run[1] as string);
   if (path === '/new') return newRunView(ctx);
   if (path === '/compare') return compareView(ctx);
   if (path === '/personas') return personasView(ctx);
-  return runsView(ctx);
+  if (path === '/runs') return runsView(ctx);
+  return brandedPage(ctx.doc, ctx.t, orqeaUrl, ctx.t('notFound.title'), ctx.t('notFound.hint'));
 }
 
-/** Top bar: logo, name, navigation, operator, language switch. */
-export function buildHeader(ctx: Ctx, operator: string, langSelect: HTMLElement): HTMLElement {
+/** Top bar: logo, name, navigation, operator, language switch, credits, way back to Orqea. */
+export function buildHeader(
+  ctx: Ctx,
+  operator: string,
+  langSelect: HTMLElement,
+  orqeaUrl: string,
+): HTMLElement {
   const { doc, t } = ctx;
   const routes: [string, I18nKey][] = [
     ['/runs', 'nav.runs'],
@@ -50,12 +70,14 @@ export function buildHeader(ctx: Ctx, operator: string, langSelect: HTMLElement)
     doc,
     'header',
     {},
-    h(doc, 'img', { src: '/logo.svg', alt: '', width: '28', height: '28' }),
+    logo(doc, 28),
     h(doc, 'strong', {}, t('app.name')),
     h(doc, 'span', { class: 'byline' }, t('app.byline')),
     nav,
     h(doc, 'span', { class: 'who' }, t('app.signedInAs', { operator })),
     langSelect,
+    backToOrqea(doc, t, orqeaUrl),
+    credits(doc, t, orqeaUrl),
   );
 }
 
@@ -65,17 +87,16 @@ export async function boot(doc: Document, win: Window, fetchImpl: Fetch): Promis
   let locale = initialLocale(win);
   const api = apiClient(fetchImpl);
   doc.documentElement.lang = locale;
-  root.replaceChildren(h(doc, 'p', { role: 'status' }, makeT(locale)('app.signingIn')));
-  const operator = await bootstrapSession(win, api);
+  root.replaceChildren(loader(doc, makeT(locale)('app.signingIn')));
+  const [operator, orqeaUrl] = await Promise.all([bootstrapSession(win, api), fetchOrqeaUrl(api)]);
   if (!operator) {
     const t = makeT(locale);
     root.replaceChildren(
       h(
         doc,
         'main',
-        { class: 'gate' },
-        h(doc, 'h1', {}, t('app.openFromConsole')),
-        h(doc, 'p', {}, t('app.openFromConsoleHint')),
+        {},
+        brandedPage(doc, t, orqeaUrl, t('app.openFromConsole'), t('app.openFromConsoleHint')),
       ),
     );
     return;
@@ -110,11 +131,13 @@ export async function boot(doc: Document, win: Window, fetchImpl: Fetch): Promis
       doc.documentElement.lang = locale;
       void render();
     });
-    const header = buildHeader(ctx, operator as string, langSelect);
+    const header = buildHeader(ctx, operator as string, langSelect, orqeaUrl);
     root.replaceChildren(header, main);
-    main.replaceChildren(h(doc, 'p', { role: 'status' }, t('app.loading')));
+    main.replaceChildren(loader(doc, t('app.loading')));
     try {
-      main.replaceChildren(await route(ctx, win.location.hash.replace(/^#/, '') || '/runs'));
+      main.replaceChildren(
+        await route(ctx, win.location.hash.replace(/^#/, '') || '/runs', orqeaUrl),
+      );
     } catch (e) {
       main.replaceChildren(
         h(doc, 'p', { role: 'alert' }, t('app.error', { detail: (e as Error).message })),

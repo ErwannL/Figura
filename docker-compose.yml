@@ -34,6 +34,7 @@ services:
       FIGURA_HOST: 0.0.0.0
       FIGURA_PORT: '4000'
       FIGURA_LOOPBACK_ONLY: ${FIGURA_LOOPBACK_ONLY:-true}
+      FIGURA_ORQEA_URL: ${FIGURA_ORQEA_URL:-https://orqea.dev}
     ports: ['127.0.0.1:4000:4000']
     volumes: [screenshots:/data/screenshots]
     depends_on: { db: { condition: service_healthy } }
