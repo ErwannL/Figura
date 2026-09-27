@@ -41,10 +41,13 @@ export class StateModel {
   }
 }
 
-/** Novelty weight: untried actions dominate, more so on rarely visited states. */
-export function weightOf(model: StateModel, state: string, c: Control): number {
+/**
+ * Novelty weight: untried actions dominate, more so on rarely visited states. On touch devices a
+ * collapsed menu (the hamburger, `aria-expanded="false"`) is opened first.
+ */
+export function weightOf(model: StateModel, state: string, c: Control, touch = false): number {
   const tries = model.triesOf(state, actionKey(c));
-  if (tries === 0) return 10 / (1 + model.visitsOf(state));
+  if (tries === 0) return (touch && c.expanded === false ? 50 : 10) / (1 + model.visitsOf(state));
   return 1 / (1 + tries) ** 2;
 }
 
@@ -67,14 +70,21 @@ export type Decision =
 
 /**
  * Next move on a screen. Stuck (no new state for `staleSteps`) ⇒ recover; a modal is closed before
- * recovering. Empty fields of a form are filled before its other controls are tried.
+ * recovering. Empty fields are filled first, then the buttons of the form just typed into.
  */
 export function decide(
   prng: Prng,
   model: StateModel,
   state: string,
   controls: Control[],
-  o: { modal: boolean; staleSteps: number; filled: Set<number> },
+  o: {
+    modal: boolean;
+    staleSteps: number;
+    filled: Set<number>;
+    touch?: boolean;
+    /** Form of the field just filled: its buttons come next, as a person submits what they typed. */
+    form?: number;
+  },
 ): Decision {
   if (model.sinceNew >= o.staleSteps || controls.length === 0)
     return o.modal ? { kind: 'close-modal' } : { kind: 'recover' };
@@ -82,6 +92,17 @@ export function decide(
   const scope =
     o.modal && controls.some((c) => c.inModal) ? controls.filter((c) => c.inModal) : controls;
   const unfilled = scope.filter((c) => TEXT_ROLES.has(c.role) && !o.filled.has(c.idx));
-  const pool = unfilled.length && prng.chance(0.7) ? unfilled : scope;
-  return { kind: 'act', control: weightedPick(prng, pool, (c) => weightOf(model, state, c)) };
+  const submit = scope.filter(
+    (c) => c.role === 'button' && o.form !== undefined && c.formId === o.form,
+  );
+  const pool =
+    unfilled.length && prng.chance(0.7)
+      ? unfilled
+      : submit.length && prng.chance(0.7)
+        ? submit
+        : scope;
+  return {
+    kind: 'act',
+    control: weightedPick(prng, pool, (c) => weightOf(model, state, c, o.touch)),
+  };
 }

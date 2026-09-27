@@ -33,6 +33,11 @@ describe('novelty strategy', () => {
     expect(weightOf(m, 's', c)).toBeLessThan(fresh);
     m.arrive('s');
     expect(weightOf(m, 's', control({ name: 'Y' }))).toBeLessThan(fresh);
+    const burger = control({ name: 'Menu', expanded: false });
+    expect(weightOf(m, 's', burger, true)).toBeGreaterThan(weightOf(m, 's', burger));
+    expect(weightOf(m, 's', control({ name: 'Open', expanded: true }), true)).toBe(
+      weightOf(m, 's', burger),
+    );
   });
 
   it('prefers the untried action overwhelmingly', () => {
@@ -73,6 +78,13 @@ describe('novelty strategy', () => {
       decide(p, m, 's', [field, ok], opts({ filled: new Set([1]) })),
     );
     expect(filled.some((d) => d.kind === 'act' && d.control.idx === 2)).toBe(true);
+    // After typing into a form, its buttons come next.
+    const submitted = Array.from({ length: 50 }, () =>
+      decide(p, m, 's', [outside, control({ idx: 3, name: 'Send', formId: 2 })], opts({ form: 2 })),
+    );
+    expect(submitted.filter((d) => d.kind === 'act' && d.control.idx === 3).length).toBeGreaterThan(
+      35,
+    );
     // A "modal" flag with no control inside: the whole page is in scope.
     expect(decide(p, m, 's', [outside], opts({ modal: true }))).toEqual({
       kind: 'act',

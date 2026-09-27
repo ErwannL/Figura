@@ -13,5 +13,7 @@ anomalies with their evidence.
 | `values.ts`      | Field values, plausible and edge cases                                        |
 | `missions.ts`    | Missions = catalogue use cases; seed data; prerequisites                      |
 | `anomalies.ts`   | Anomaly book (dedup, severity), info records, secret redaction                |
+| `session.ts`     | One session on a Playwright page: scan, detect, decide, act, screenshot       |
+| `shots.ts`       | PNG screenshots (one per state × device, evidence per anomaly), retention     |
 
 Every random choice goes through the session's PRNG (`createPrng(seed).fork("<device>#<slot>")`).

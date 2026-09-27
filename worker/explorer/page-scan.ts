@@ -91,9 +91,12 @@ export function scanText(
 const INTERACTIVE =
   'a[href], button, input, select, textarea, [role="button"], [role="link"], [role="tab"], [role="menuitem"], [role="checkbox"], [role="switch"], [role="option"], [role="combobox"]';
 
-/** Unit-tested in happy-dom and injected into real pages as source text (see scanScript). */
+/**
+ * Unit-tested in happy-dom and injected into real pages as source text (see scanScript). Widths
+ * use the layout viewport: on mobile, innerWidth grows when the page zooms out to fit wide content.
+ */
 export function scanPage(doc: Document, win: Window, h: Helpers): Scan {
-  const vw = win.innerWidth;
+  const vw = doc.documentElement.clientWidth || win.innerWidth;
   const vh = win.innerHeight;
   const hidden = (el: Element) => h.isHidden(el, win);
   const forms = Array.from(doc.querySelectorAll('form'));
