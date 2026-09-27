@@ -115,3 +115,32 @@ button {
     animation: none !important;
   }
 }
+/* Branding (same set as SportSplitter / Archipel by Orqea): loader, credits, way back. */
+.loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 20vh 0;
+  color: var(--muted);
+}
+.credits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.8em;
+}
+.credits a {
+  color: var(--muted);
+}
+.back {
+  font-weight: 600;
+  text-decoration: none;
+}
+.gate .credits {
+  justify-content: center;
+}
+.gate-name {
+  font-size: 1.2em;
+  margin: 0.25rem 0 0;
+}

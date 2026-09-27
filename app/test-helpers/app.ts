@@ -32,6 +32,7 @@ export async function makeApp(
     maxRunsListed: 50,
     targets: {},
     vigieSecret: null,
+    orqeaUrl: 'https://orqea.dev',
     ...overrides,
   };
   const app = await buildApp(cfg, { db, data, nowS, logger: false });

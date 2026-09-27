@@ -37,7 +37,8 @@ export async function buildApp(
   });
   app.get('/health', async () => {
     await deps.db.query('select 1');
-    return { ok: true };
+    // `orqeaUrl` is public (a link): it tells the UI which Orqea « Back to Orqea » goes to.
+    return { ok: true, orqeaUrl: cfg.orqeaUrl };
   });
   authRoutes(app, cfg, deps.db, deps.nowS);
   runRoutes(app, cfg, deps.db, deps.data);

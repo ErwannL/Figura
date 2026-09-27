@@ -17,4 +17,6 @@ await sharp(readFileSync('brand/og-image.svg'))
 writeFileSync('brand/favicon.ico', await pngToIco(['brand/logo-16.png', 'brand/logo-32.png']));
 copyFileSync('brand/logo.svg', 'ui/public/logo.svg');
 copyFileSync('brand/favicon.ico', 'ui/public/favicon.ico');
+copyFileSync('brand/logo.svg', 'ui/public/favicon.svg');
+copyFileSync('brand/logo-animated.svg', 'ui/public/logo-animated.svg');
 console.info('brand assets regenerated');

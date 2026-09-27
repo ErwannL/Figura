@@ -29,6 +29,14 @@ describe('app config', () => {
     expect(() => cfg(env.FIGURA_SSO_SECRET)).toThrow('FIGURA_VIGIE_SECRET must differ');
     expect(() => cfg(env.FIGURA_SESSION_SECRET)).toThrow('FIGURA_VIGIE_SECRET must differ');
   });
+  it('FIGURA_ORQEA_URL: orqea.dev by default, any http(s) URL, anything else refused', () => {
+    const cfg = (v?: string) => appConfigFromEnv({ ...env, FIGURA_ORQEA_URL: v }, { uiDir: '/ui' });
+    expect(cfg().orqeaUrl).toBe('https://orqea.dev');
+    expect(cfg('http://localhost:3001/apps/return').orqeaUrl).toBe(
+      'http://localhost:3001/apps/return',
+    );
+    expect(() => cfg('javascript:alert(1)')).toThrow('FIGURA_ORQEA_URL');
+  });
   it('reads named Orqea targets from FIGURA_TARGETS, refusing a malformed one', () => {
     const targets = '{"recette":{"api":"http://host.docker.internal:5102"}}';
     expect(appConfigFromEnv({ ...env, FIGURA_TARGETS: targets }, { uiDir: '/ui' }).targets).toEqual(
