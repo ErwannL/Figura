@@ -55,6 +55,17 @@ export function formInfo(el: Element, forms: Element[]) {
   };
 }
 
+/** aria-expanded, modal, drag handle, and Orqea's `data-danger` mark (on the control or an ancestor). */
+export function controlState(el: Element, modals: Element[]) {
+  const expanded = el.getAttribute('aria-expanded');
+  return {
+    expanded: expanded === null ? null : expanded === 'true',
+    inModal: modals.some((m) => m.contains(el)),
+    draggable: el.getAttribute('draggable') === 'true',
+    danger: el.closest('[data-danger]')?.getAttribute('data-danger') ?? null,
+  };
+}
+
 export function isRawKey(text: string): boolean {
   if (!/^[a-z][a-zA-Z0-9_-]*(\.[a-zA-Z0-9_-]+)+$/.test(text)) return false;
   if (/\.(com|net|org|io|app|fr|dev|json|js|ts|png|jpg|svg|txt|csv|md|html)$/i.test(text))
@@ -135,7 +146,6 @@ export function scanPage(doc: Document, win: Window, h: Helpers): Scan {
     seen.add(key);
     const idx = controls.length;
     el.setAttribute('data-figura-x', String(idx));
-    const expanded = el.getAttribute('aria-expanded');
     controls.push({
       idx,
       role,
@@ -144,9 +154,7 @@ export function scanPage(doc: Document, win: Window, h: Helpers): Scan {
       type: (el.getAttribute('type') ?? '').toLowerCase(),
       href,
       ...formInfo(el, forms),
-      expanded: expanded === null ? null : expanded === 'true',
-      inModal: modals.some((m) => m.contains(el)),
-      draggable: el.getAttribute('draggable') === 'true',
+      ...controlState(el, modals),
       box: { x: r.x, y: r.y, width: r.width, height: r.height },
     });
   }
@@ -184,6 +192,7 @@ export function scanScript(): string {
     roleOf,
     roleOfControl,
     formInfo,
+    controlState,
     isRawKey,
     scanText,
   ]

@@ -28,6 +28,15 @@ function scan(html: string, o: { width?: number; docWidth?: number; url?: string
 afterEach(() => undefined);
 
 describe('scanPage: inventory', () => {
+  it('reads data-danger on the control or its nearest ancestor', () => {
+    const { result } = scan(`
+      <button data-danger="logout">Déconnexion</button>
+      <div data-danger="payment"><a href="/billing/x"><span>Payer</span></a></div>
+      <button>Ordinary</button>
+    `);
+    expect(result.controls.map((c) => c.danger)).toEqual(['logout', 'payment', null]);
+  });
+
   it('lists visible, enabled, on-screen controls once, stamps them, reads forms', () => {
     const { result, doc } = scan(`
       <a href="/dashboard">Home</a><a href="/dashboard">Home</a>
@@ -72,7 +81,7 @@ describe('scanPage: inventory', () => {
       formHasPassword: false,
     });
     expect(result.controls[8]).toMatchObject({ inModal: true });
-    expect(result.controls[9]).toMatchObject({ draggable: true, expanded: null });
+    expect(result.controls[9]).toMatchObject({ draggable: true, expanded: null, danger: null });
     expect(doc.querySelectorAll('[data-figura-x]').length).toBe(11);
     expect(result.modal).toBe(true);
     expect(result.offscreen).toEqual(['button "Left"']);

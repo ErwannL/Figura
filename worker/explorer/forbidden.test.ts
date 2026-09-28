@@ -8,6 +8,10 @@ const link = (href: string, name = 'Go') =>
 
 /** Every catalogue entry with at least one structural case (no text) and, when it has one, a name case. */
 const CASES: Record<string, Control[]> = {
+  'danger-marked': [
+    control({ name: 'Déconnexion', danger: 'logout' }),
+    control({ role: 'link', tag: 'a', name: '支払う', danger: 'payment' }),
+  ],
   logout: [
     link('/logout', '⎋'),
     control({ form: 'POST /api/auth/logout', formId: 0 }),

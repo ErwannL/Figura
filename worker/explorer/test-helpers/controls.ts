@@ -16,6 +16,7 @@ export function control(o: Partial<Control> = {}): Control {
     expanded: null,
     inModal: false,
     draggable: false,
+    danger: null,
     box: { x: 0, y: 0, width: 80, height: 32 },
     ...o,
   };

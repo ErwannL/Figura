@@ -26,6 +26,8 @@ export interface Control {
   expanded: boolean | null;
   inModal: boolean;
   draggable: boolean;
+  /** `data-danger` of the control or its nearest ancestor (Orqea marks its dangerous controls), null when none. */
+  danger: string | null;
   box: { x: number; y: number; width: number; height: number };
 }
 
@@ -50,6 +52,11 @@ const offOrigin = (url: string, origin: string): boolean => {
 const SYNTHETIC = /@synthetic\.invalid$/i;
 
 export const FORBIDDEN: ForbiddenRule[] = [
+  {
+    key: 'danger-marked',
+    why: 'Orqea marks it data-danger (logout, account deletion, export, credentials, encryption, payment, OAuth, SSH): language-proof',
+    test: (c) => c.danger !== null,
+  },
   {
     key: 'logout',
     why: 'ends the session (only a scripted logout + login is allowed)',

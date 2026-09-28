@@ -73,8 +73,11 @@ without Stripe; see requests to Orqea). Locale fixed to `en`. Target: the usual 
 4. Forbidden catalogue (`worker/explorer/forbidden.ts`): logout, account deletion, data export,
    password/e-mail change (any control in a form with a password field), board encryption,
    payment/Stripe (checkout, portal, "choose plan"), OAuth providers, SSH servers, invitations to a
-   non-synthetic address, links leaving the target's origin. Matched on role, href, route, form
-   action and origin first; English accessible names only as a second signal (locale fixed to `en`).
+   non-synthetic address, links leaving the target's origin. **First rule: `data-danger`** on the
+   control or an ancestor (Orqea marks every such control, `frontend/src/config/dangerControls.js`:
+   `logout`, `delete-account`, `export`, `credentials`, `encryption`, `payment`, `oauth`, `ssh`) —
+   language-proof. Then role, href, route, form action and origin; English accessible names only as
+   a last signal (locale fixed to `en`).
 5. Same origin: a navigation to another origin is aborted and recorded as `info`.
 6. Cleanup: `finish()` in `finally`; `{before, after, residualRows}` in the report; residual > 0 ⇒
    run anomaly and `failed`.
@@ -170,7 +173,7 @@ full page for layout anomalies, in `<FIGURA_SCREENSHOTS_DIR>/<runId>/x-*.png`. R
 2. **Seed data through the admin API (optional).** `POST /api/admin/synthetic/seed {email, runId,
 boards: n, listsPerBoard, cardsPerList}` → `201 {boards: [ids]}` would make seeding independent
    of UI changes; today Figura seeds through the catalogue's UI use cases.
-3. **Structural hooks for forbidden actions.** A stable `data-danger="logout|delete-account|
-export|credentials|encryption|payment|oauth|ssh"` (or equivalent `aria-describedby` id) on those
-   controls would make the forbidden catalogue language-proof; today it relies on routes, form
-   actions and hrefs, with English names as a second signal.
+3. ~~Structural hooks for forbidden actions.~~ **Done**: Orqea marks its dangerous controls with
+   `data-danger="<kind>"` (catalogue `frontend/src/config/dangerControls.js`, a contract: a kind
+   never changes); the page scan reads it (`Control.danger`) and `danger-marked` is the first
+   forbidden rule.
