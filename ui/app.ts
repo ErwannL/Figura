@@ -9,7 +9,7 @@ import {
   DEFAULT_ORQEA_URL,
   fetchOrqeaUrl,
   loader,
-  logo,
+  hoverLogo,
 } from './brand.js';
 import { bootstrapSession } from './sso.js';
 import { compareView } from './views/compare.js';
@@ -70,7 +70,7 @@ export function buildHeader(
     doc,
     'header',
     {},
-    logo(doc, 28),
+    hoverLogo(doc, 28),
     h(doc, 'strong', {}, t('app.name')),
     h(doc, 'span', { class: 'byline' }, t('app.byline')),
     nav,

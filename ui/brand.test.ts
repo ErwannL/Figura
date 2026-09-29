@@ -68,6 +68,14 @@ describe('branding', () => {
     expect(author.getAttribute('href')).toBe(AUTHOR.href);
     expect(author.getAttribute('target')).toBe('_blank');
     expect(author.getAttribute('rel')).toBe('noreferrer noopener');
+    const marks = header.querySelectorAll('.logo-hover img');
+    expect([...marks].map((m) => m.getAttribute('src'))).toEqual([
+      '/logo.svg',
+      '/logo-animated.svg',
+    ]);
+    const css = readFileSync('ui/public/styles.css', 'utf8');
+    expect(css).toContain('.logo-hover:hover .logo-animated');
+    expect(css).toMatch(/prefers-reduced-motion: reduce\)\s*\{\s*\.logo-hover/);
   });
 
   it('an unknown route is a branded 404, not the runs list', async () => {
@@ -99,5 +107,6 @@ describe('branding', () => {
     expect(gate.textContent).toContain('Ouvrez-moi depuis la console');
     expect(gate.querySelector('a.back')!.getAttribute('href')).toBe(DEFAULT_ORQEA_URL);
     expect(gate.querySelector('a[data-credit=author]')).not.toBeNull();
+    expect(gate.querySelector('.logo-hover .logo-animated')).not.toBeNull();
   });
 });

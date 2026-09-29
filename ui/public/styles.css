@@ -162,3 +162,27 @@ button {
   height: auto;
   border: 1px solid #ccc;
 }
+/* Header mark: the animated logo replaces the static one on hover (not under reduced motion). */
+.logo-hover {
+  position: relative;
+  display: inline-flex;
+}
+.logo-hover .logo-animated {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+}
+.logo-hover:hover .logo-animated {
+  visibility: visible;
+}
+.logo-hover:hover > .logo:not(.logo-animated) {
+  visibility: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo-hover:hover .logo-animated {
+    visibility: hidden;
+  }
+  .logo-hover:hover > .logo:not(.logo-animated) {
+    visibility: visible;
+  }
+}

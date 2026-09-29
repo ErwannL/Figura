@@ -28,6 +28,26 @@ export function logo(doc: Document, size: number, animated = false, alt = ''): H
   return h(doc, 'img', { class: 'logo', src, alt, width: w, height: w });
 }
 
+/**
+ * Header mark: the static logo, swapped for the animated one while the pointer is over it (pure
+ * CSS, `.logo-hover`); under reduced motion the swap is disabled and the static mark stays.
+ */
+export function hoverLogo(doc: Document, size: number, alt = ''): HTMLElement {
+  return h(
+    doc,
+    'span',
+    { class: 'logo-hover' },
+    logo(doc, size, false, alt),
+    h(doc, 'img', {
+      class: 'logo logo-animated',
+      src: '/logo-animated.svg',
+      alt: '',
+      width: String(size),
+      height: String(size),
+    }),
+  );
+}
+
 /** « Powered by Orqea » (same tab, top frame) and « Developed by Erwann Laplante » (new tab). */
 export function credits(doc: Document, t: T, orqeaUrl: string): HTMLElement {
   return h(
@@ -78,7 +98,7 @@ export function brandedPage(
     doc,
     'section',
     { class: 'gate' },
-    logo(doc, 64, false, t('app.name')),
+    hoverLogo(doc, 64, t('app.name')),
     h(
       doc,
       'p',
