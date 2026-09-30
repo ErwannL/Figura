@@ -191,6 +191,16 @@ class ExploreRun {
         if (this.params.seedData) for (const id of SEED_USE_CASES) await r.setup(id);
       } catch (e) {
         const error = `setup: ${(e as Error).message.split('\n')[0]}`;
+        // The page as the persona saw it: the only way to know WHY a sign-up could not start.
+        await this.shots.take(driver.currentPage, {
+          session: key,
+          device: plan.device,
+          step: 0,
+          route: new URL(driver.currentPage.url()).pathname,
+          fingerprint: 'setup-failed',
+          action: 'setup',
+          kind: 'setup',
+        });
         return { ...base, steps: 0, states: 0, stoppedBy: 'error', routes: {}, error };
       }
       const result = await this.explore(driver, plan, r, sleep);

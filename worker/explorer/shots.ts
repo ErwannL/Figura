@@ -4,7 +4,8 @@ import type { Page } from 'playwright';
 import type { DeviceKey } from '../../shared/explorer.js';
 import { settleForShot } from '../drivers/settle.js';
 
-export type ShotKind = 'state' | 'after' | 'full';
+/** `setup` : what the page showed when a session could not even sign up (the evidence of why). */
+export type ShotKind = 'state' | 'after' | 'full' | 'setup';
 
 export interface Shot {
   file: string;
@@ -18,7 +19,7 @@ export interface Shot {
 }
 
 /** Explorer screenshots are `x-<device>-<slot>-<step>-<kind>.png` in the run's directory. */
-export const SHOT_FILE = /^x-[a-z]+-\d-\d{4}-(state|after|full)\.png$/;
+export const SHOT_FILE = /^x-[a-z]+-\d-\d{4}-(state|after|full|setup)\.png$/;
 
 /** Screenshots of one run: one per new state and device, bounded in number. */
 export class ShotBook {

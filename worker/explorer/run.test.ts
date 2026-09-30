@@ -217,6 +217,8 @@ describe('explorer runs (worker)', () => {
     expect(done.error).toMatch(/^every session failed: setup: /);
     expect(report.sessions[0]).toMatchObject({ stoppedBy: 'error', steps: 0 });
     expect(report.sessions[0]!.error).toMatch(/^setup: /);
+    // The failing page is kept as evidence (a blank or blocked page explains the failure).
+    expect(report.screenshots.some((s) => s.kind === 'setup')).toBe(true);
   });
 });
 
