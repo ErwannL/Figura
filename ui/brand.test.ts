@@ -58,7 +58,7 @@ describe('branding', () => {
     expect(header.textContent).toContain('Figura');
     expect(header.textContent).toContain('par Orqea');
     const back = header.querySelector('a.back')!;
-    expect(back.textContent).toBe('← Retour sur Orqea');
+    expect(back.textContent).toBe('← Revenir sur Orqea');
     expect(back.getAttribute('href')).toBe(ORQEA);
     const owner = header.querySelector('a[data-credit=owner]')!;
     expect(owner.textContent).toBe('Propulsé par Orqea');
@@ -75,6 +75,7 @@ describe('branding', () => {
     ]);
     const css = readFileSync('ui/public/styles.css', 'utf8');
     expect(css).toContain('.logo-hover:hover .logo-animated');
+    expect(css).toContain('header:focus-within .logo-hover .logo-animated');
     expect(css).toMatch(/prefers-reduced-motion: reduce\)\s*\{\s*\.logo-hover/);
   });
 
@@ -108,5 +109,18 @@ describe('branding', () => {
     expect(gate.querySelector('a.back')!.getAttribute('href')).toBe(DEFAULT_ORQEA_URL);
     expect(gate.querySelector('a[data-credit=author]')).not.toBeNull();
     expect(gate.querySelector('.logo-hover .logo-animated')).not.toBeNull();
+  });
+
+  it('the way back is hidden inside an iframe (the Orqea console)', async () => {
+    const e = env('', { status: 200, body: { ok: true, orqeaUrl: ORQEA } });
+    Object.defineProperty(e.win, 'top', { value: {}, configurable: true });
+    await boot(e.doc, e.w, e.fetchImpl);
+    expect(e.doc.querySelector('header a.back')!.hasAttribute('hidden')).toBe(true);
+  });
+
+  it('the way back is visible outside an iframe', async () => {
+    const e = env('', { status: 200, body: { ok: true, orqeaUrl: ORQEA } });
+    await boot(e.doc, e.w, e.fetchImpl);
+    expect(e.doc.querySelector('header a.back')!.hasAttribute('hidden')).toBe(false);
   });
 });

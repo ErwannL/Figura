@@ -72,7 +72,15 @@ export function credits(doc: Document, t: T, orqeaUrl: string): HTMLElement {
 
 /** « ← Back to Orqea »: the session comes from Orqea, so there is no logout, we go back. */
 export function backToOrqea(doc: Document, t: T, orqeaUrl: string): HTMLElement {
-  return h(doc, 'a', { class: 'back', href: orqeaUrl, target: '_top' }, t('brand.back'));
+  // Inside the Orqea console iframe the console itself is the way back: the button is hidden.
+  const win = doc.defaultView as Window;
+  const inFrame = win.self !== win.top;
+  return h(
+    doc,
+    'a',
+    { class: 'back', href: orqeaUrl, target: '_top', hidden: inFrame },
+    t('brand.back'),
+  );
 }
 
 /** Full-page loader: the animated logo, never a spinner. */

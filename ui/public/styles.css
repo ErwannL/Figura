@@ -172,17 +172,28 @@ button {
   inset: 0;
   visibility: hidden;
 }
-.logo-hover:hover .logo-animated {
+.logo-hover:hover .logo-animated,
+header:focus-within .logo-hover .logo-animated,
+.gate:focus-within .logo-hover .logo-animated {
   visibility: visible;
 }
-.logo-hover:hover > .logo:not(.logo-animated) {
+.logo-hover:hover > .logo:not(.logo-animated),
+header:focus-within .logo-hover > .logo:not(.logo-animated),
+.gate:focus-within .logo-hover > .logo:not(.logo-animated) {
   visibility: hidden;
 }
 @media (prefers-reduced-motion: reduce) {
-  .logo-hover:hover .logo-animated {
+  .logo-hover:hover .logo-animated,
+  header:focus-within .logo-hover .logo-animated,
+  .gate:focus-within .logo-hover .logo-animated {
     visibility: hidden;
   }
-  .logo-hover:hover > .logo:not(.logo-animated) {
+  .logo-hover:hover > .logo:not(.logo-animated),
+  header:focus-within .logo-hover > .logo:not(.logo-animated),
+  .gate:focus-within .logo-hover > .logo:not(.logo-animated) {
     visibility: visible;
   }
+}
+.back[hidden] {
+  display: none;
 }
