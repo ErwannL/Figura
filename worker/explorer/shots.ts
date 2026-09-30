@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { readdirSync, rmSync, statSync } from 'node:fs';
 import type { Page } from 'playwright';
 import type { DeviceKey } from '../../shared/explorer.js';
+import { settleForShot } from '../drivers/settle.js';
 
 export type ShotKind = 'state' | 'after' | 'full';
 
@@ -42,6 +43,7 @@ export class ShotBook {
     const [device, slot] = meta.session.split('#') as [string, string];
     const file = `x-${device}-${slot}-${String(meta.step).padStart(4, '0')}-${meta.kind}.png`;
     try {
+      await settleForShot(page);
       await page.screenshot({
         path: join(this.dir, file),
         type: 'png',

@@ -17,6 +17,7 @@ import { applyMistakes, skipsStep } from '../engine/mistakes.js';
 import { fillTemplate } from '../engine/template.js';
 import type { ApiCall, AttemptContext, Driver, Paywall, StepOutcome } from '../engine/types.js';
 import { measureScript, type PageMeasure } from './measure.js';
+import { settleForShot } from './settle.js';
 
 export interface BrowserDriverOptions {
   /** What the persona opens (Orqea's public web origin). */
@@ -389,6 +390,7 @@ export class BrowserDriver implements Driver {
   private async screenshot(label: string): Promise<string | null> {
     if (!this.opts.screenshotDir) return null;
     const file = `${label.replace(/[^a-z0-9-]/gi, '_')}.jpg`;
+    await settleForShot(this.page);
     await this.page.screenshot({
       path: join(this.opts.screenshotDir, file),
       type: 'jpeg',
