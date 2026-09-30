@@ -71,13 +71,24 @@ export function buildHeader(
     'header',
     {},
     hoverLogo(doc, 28),
-    h(doc, 'strong', {}, t('app.name')),
-    h(doc, 'span', { class: 'byline' }, t('app.byline')),
+    h(
+      doc,
+      'div',
+      { class: 'brand-text' },
+      h(
+        doc,
+        'span',
+        { class: 'brand-name' },
+        h(doc, 'strong', {}, t('app.name')),
+        ' ',
+        h(doc, 'span', { class: 'byline' }, t('app.byline')),
+      ),
+      credits(doc, t, orqeaUrl),
+    ),
     nav,
     h(doc, 'span', { class: 'who' }, t('app.signedInAs', { operator })),
     langSelect,
     backToOrqea(doc, t, orqeaUrl),
-    credits(doc, t, orqeaUrl),
   );
 }
 

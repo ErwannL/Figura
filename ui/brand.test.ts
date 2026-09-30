@@ -71,6 +71,12 @@ describe('branding', () => {
     expect(author.getAttribute('aria-label')).toBe('Développé par Erwann Laplante');
     expect(owner.getAttribute('target')).toBe('_top');
     expect(back.getAttribute('target')).toBe('_top');
+    // both credit lines sit UNDER the name, in the same header block
+    const text = header.querySelector('.brand-text')!;
+    expect(text.children[0]!.className).toBe('brand-name');
+    expect(text.children[1]!.className).toBe('credits');
+    expect(text.contains(owner) && text.contains(author)).toBe(true);
+    expect(author.textContent).not.toMatch(/nouvel onglet|new tab/i);
     const marks = header.querySelectorAll('.logo-hover img');
     expect([...marks].map((m) => m.getAttribute('src'))).toEqual([
       '/logo.svg',
