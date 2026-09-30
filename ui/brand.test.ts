@@ -68,6 +68,9 @@ describe('branding', () => {
     expect(author.getAttribute('href')).toBe(AUTHOR.href);
     expect(author.getAttribute('target')).toBe('_blank');
     expect(author.getAttribute('rel')).toBe('noreferrer noopener');
+    expect(author.getAttribute('aria-label')).toBe('Développé par Erwann Laplante');
+    expect(owner.getAttribute('target')).toBe('_top');
+    expect(back.getAttribute('target')).toBe('_top');
     const marks = header.querySelectorAll('.logo-hover img');
     expect([...marks].map((m) => m.getAttribute('src'))).toEqual([
       '/logo.svg',

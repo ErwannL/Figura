@@ -48,7 +48,7 @@ export function hoverLogo(doc: Document, size: number, alt = ''): HTMLElement {
   );
 }
 
-/** « Powered by Orqea » (same tab, top frame) and « Developed by Erwann Laplante » (new tab). */
+/** « Powered by Orqea » (same tab, top frame) and « Developed by Erwann Laplante » (new window). */
 export function credits(doc: Document, t: T, orqeaUrl: string): HTMLElement {
   return h(
     doc,
@@ -62,7 +62,7 @@ export function credits(doc: Document, t: T, orqeaUrl: string): HTMLElement {
         href: AUTHOR.href,
         target: '_blank',
         rel: 'noreferrer noopener',
-        'aria-label': t('brand.authorNewTab', { name: AUTHOR.name }),
+        'aria-label': t('brand.author', { name: AUTHOR.name }),
         'data-credit': 'author',
       },
       t('brand.author', { name: AUTHOR.name }),
