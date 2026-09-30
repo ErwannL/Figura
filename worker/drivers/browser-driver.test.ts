@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { Browser } from 'playwright';
 import { mkdtempSync, existsSync } from 'node:fs';
 import { createServer, type IncomingHttpHeaders, type Server } from 'node:http';
@@ -323,6 +323,8 @@ describe('routing: rewritten origins, run header only to the API', () => {
     expect(r.ok, r.error ?? '').toBe(true);
     expect(r.pages).toEqual(['/']);
     const byWho = (who: string) => seen.filter((s) => s.who === who);
+    // The image is a fire-and-forget request: wait for it instead of racing the page script.
+    await vi.waitFor(() => expect(byWho('other').length).toBeGreaterThan(0));
     expect(byWho('web')[0]!.headers['x-synthetic-run']).toBeUndefined();
     expect(byWho('other')[0]!.headers['x-synthetic-run']).toBeUndefined();
     expect(r.apiCalls.map((c) => c.path)).toContain('/api/cards/:id/comments');

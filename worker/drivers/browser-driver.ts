@@ -116,7 +116,13 @@ export class BrowserDriver implements Driver {
     if (!r.rewritten && !r.toApi) return route.continue();
     // A fresh header per request: it is valid for 300 s and a session can outlast that.
     const headers = r.toApi ? { ...req.headers(), [RUN_HEADER]: this.opts.runHeader() } : undefined;
-    return route.continue({ url: r.rewritten ? r.url : undefined, headers });
+    if (!r.rewritten) return route.continue({ headers });
+    // The page believes it talks to the PUBLIC origin (`localhost:3001`): the answer must look like
+    // it came from there. A plain URL override makes the real server answer from another origin,
+    // and Chromium then blocks every module script (net::ERR_BLOCKED_BY_CLIENT, a blank white page:
+    // a dev server such as Vite sends no CORS header to a same-origin request).
+    const response = await route.fetch({ url: r.url, headers });
+    return route.fulfill({ response });
   }
 
   private onResponse(r: Response): void {

@@ -185,12 +185,20 @@ class ExploreRun {
       knownIn(catalogue),
     );
     const base = { device: plan.device, slot: plan.slot, account: creds.email };
+    // What the browser complained about while the session was trying to sign up (evidence of why).
+    const browserErrors: string[] = [];
+    driver.currentPage.on('pageerror', (e) => browserErrors.push(String(e).slice(0, 160)));
+    driver.currentPage.on('console', (m) => browserErrors.push(m.text().slice(0, 160)));
+    driver.currentPage.on('requestfailed', (q) =>
+      browserErrors.push(`${q.url().slice(0, 100)} ${JSON.stringify(q.failure())}`),
+    );
     try {
       try {
         await r.signedIn();
         if (this.params.seedData) for (const id of SEED_USE_CASES) await r.setup(id);
       } catch (e) {
-        const error = `setup: ${(e as Error).message.split('\n')[0]}`;
+        const first = (e as Error).message.split('\n')[0];
+        const error = `setup: ${first} [browser: ${browserErrors.slice(-6).join(' | ')}]`;
         // The page as the persona saw it: the only way to know WHY a sign-up could not start.
         await this.shots.take(driver.currentPage, {
           session: key,
