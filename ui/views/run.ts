@@ -139,6 +139,8 @@ export async function runView(ctx: Ctx, id: string): Promise<HTMLElement> {
   const { events } = await ctx.api.get<{ events: UiEvent[] }>(`/api/runs/${id}/events`);
   const personas = [...new Set(events.map((e) => e.personaId))];
   personas.forEach((p) => personaSelect.append(h(doc, 'option', { value: p }, p)));
+  // Sans aucun persona il n'y a rien à choisir : pas de liste vide de 20 px.
+  personaSelect.hidden = personas.length === 0;
   const show = () =>
     inspect.replaceChildren(
       inspector(

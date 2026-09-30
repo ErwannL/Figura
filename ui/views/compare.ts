@@ -15,20 +15,22 @@ export async function compareView(ctx: Ctx): Promise<HTMLElement> {
       h(
         doc,
         'select',
-        { name },
+        { name, disabled: done.length === 0 },
         ...done.map((r) =>
           h(doc, 'option', { value: r.id }, `${r.id} ${r.label} (seed ${r.seed})`),
         ),
       ),
     );
   const out = h(doc, 'p', {});
+  const empty = h(doc, 'p', { role: 'status', hidden: done.length > 0 }, t('compare.none'));
   const form = h(
     doc,
     'form',
     {},
     pick('a', t('compare.a')),
     pick('b', t('compare.b')),
-    h(doc, 'button', { type: 'submit' }, t('compare.submit')),
+    h(doc, 'button', { type: 'submit', disabled: done.length === 0 }, t('compare.submit')),
+    empty,
     out,
   ) as HTMLFormElement;
   form.addEventListener('submit', (ev) => {

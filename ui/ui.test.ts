@@ -385,6 +385,24 @@ describe('views', () => {
     expect((await route(ctxFor(e), '/personas')).textContent).toContain('Sam');
   });
 
+  it('compare with nothing to compare explains itself instead of showing empty 20 px lists', async () => {
+    const e = env('', (url) => (url === '/api/runs' ? { body: { runs: [] } } : undefined));
+    const view = await route(ctxFor(e), '/compare');
+    const hint = view.querySelector('[role="status"]') as HTMLElement;
+    expect(hint.hasAttribute('hidden')).toBe(false);
+    expect(hint.textContent).toContain('No finished journey run');
+    const form = view.querySelector('form') as HTMLFormElement;
+    expect((form.elements.namedItem('a') as HTMLSelectElement).disabled).toBe(true);
+    expect((form.querySelector('button') as HTMLButtonElement).disabled).toBe(true);
+    const ready = env('', (url) =>
+      url === '/api/runs' ? { body: { runs: [{ ...run, status: 'done' }] } } : undefined,
+    );
+    const filled = await route(ctxFor(ready), '/compare');
+    expect((filled.querySelector('[role="status"]') as HTMLElement).hasAttribute('hidden')).toBe(
+      true,
+    );
+  });
+
   it('inspector with no steps; dom helpers; api errors on non-JSON', async () => {
     const e = env('', () => undefined);
     expect(inspector(ctxFor(e), 'x', []).textContent).toBe('No event for this persona.');
