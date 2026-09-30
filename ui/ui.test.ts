@@ -71,6 +71,7 @@ function defaults(url: string): { status?: number; body?: unknown } {
   if (url === '/api/me')
     return { body: { operator: 'Ops Alice', target: null, targetConfigured: null, targets: [] } };
   if (url === '/api/runs') return { body: { runs: [run] } };
+  if (url.endsWith('/screenshots')) return { body: { files: [] } };
   if (url === '/api/meta') return { body: meta };
   if (url.startsWith('/api/runs/abc123/events'))
     return {
@@ -390,7 +391,7 @@ describe('views', () => {
     const view = await route(ctxFor(e), '/compare');
     const hint = view.querySelector('[role="status"]') as HTMLElement;
     expect(hint.hasAttribute('hidden')).toBe(false);
-    expect(hint.textContent).toContain('No finished journey run');
+    expect(hint.textContent).toContain('Nothing to compare yet');
     const form = view.querySelector('form') as HTMLFormElement;
     expect((form.elements.namedItem('a') as HTMLSelectElement).disabled).toBe(true);
     expect((form.querySelector('button') as HTMLButtonElement).disabled).toBe(true);
@@ -401,6 +402,39 @@ describe('views', () => {
     expect((filled.querySelector('[role="status"]') as HTMLElement).hasAttribute('hidden')).toBe(
       true,
     );
+  });
+
+  it('run page: screenshot gallery, no calibration for an explorer run, readable NO_FUNNEL_REPORT', async () => {
+    const shots = env('', (url) =>
+      url === '/api/runs/abc123/screenshots'
+        ? { body: { files: ['x-1.png', 'x-2.png'] } }
+        : undefined,
+    );
+    const view = await route(ctxFor(shots), '/runs/abc123');
+    const links = view.querySelectorAll('.gallery a');
+    expect(links).toHaveLength(2);
+    expect(links[0]!.getAttribute('href')).toBe('/api/runs/abc123/screenshots/x-1.png');
+    expect(links[0]!.getAttribute('target')).toBe('_blank');
+    expect(view.textContent).toContain('Screenshots');
+    const none = await route(ctxFor(env('', () => undefined)), '/runs/abc123');
+    expect(none.querySelector('.gallery')).toBeNull();
+    expect(none.textContent).toContain('No screenshot for this run');
+    const explorer = env('', (url) =>
+      url === '/api/runs/abc123'
+        ? { body: { run: { ...run, kind: 'explore' }, transitions: [] } }
+        : undefined,
+    );
+    expect((await route(ctxFor(explorer), '/runs/abc123')).querySelector('form')).toBeNull();
+    const noFunnel = env('', (url) =>
+      url.endsWith('/calibration')
+        ? { status: 404, body: { error: 'NO_FUNNEL_REPORT' } }
+        : undefined,
+    );
+    const page = await route(ctxFor(noFunnel), '/runs/abc123');
+    const form = page.querySelector('form') as HTMLFormElement;
+    form.dispatchEvent(new noFunnel.win.Event('submit', { cancelable: true }) as unknown as Event);
+    await tick();
+    expect(form.querySelector('[role="status"]')!.textContent).toContain('no funnel report');
   });
 
   it('inspector with no steps; dom helpers; api errors on non-JSON', async () => {

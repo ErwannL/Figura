@@ -84,6 +84,34 @@ function reportLinks(ctx: Ctx, id: string): HTMLElement {
   );
 }
 
+/** La galerie des captures d'un run : miniatures, un clic ouvre l'image entière. */
+async function gallery(ctx: Ctx, id: string): Promise<HTMLElement> {
+  const { doc, t } = ctx;
+  // Les captures sont un plus : une galerie indisponible ne casse pas la page du run.
+  const { files } = await ctx.api
+    .get<{ files: string[] }>(`/api/runs/${id}/screenshots`)
+    .catch(() => ({ files: [] as string[] }));
+  if (files.length === 0) return h(doc, 'p', {}, t('run.noScreenshots'));
+  return h(
+    doc,
+    'div',
+    { class: 'gallery' },
+    ...files.map((file) =>
+      h(
+        doc,
+        'a',
+        { href: `/api/runs/${id}/screenshots/${file}`, target: '_blank', rel: 'noopener' },
+        h(doc, 'img', {
+          src: `/api/runs/${id}/screenshots/${file}`,
+          alt: file,
+          width: '200',
+          loading: 'lazy',
+        }),
+      ),
+    ),
+  );
+}
+
 function calibration(ctx: Ctx, id: string): HTMLElement {
   const { doc, t } = ctx;
   const text = h(doc, 'textarea', {
@@ -113,10 +141,25 @@ function calibration(ctx: Ctx, id: string): HTMLElement {
         ),
       );
     } catch (e) {
-      out.textContent = t('app.error', { detail: (e as Error).message });
+      const message = (e as Error).message;
+      out.textContent = message.includes('NO_FUNNEL_REPORT')
+        ? t('run.noFunnel')
+        : t('app.error', { detail: message });
     }
   });
   return form;
+}
+
+/** Rapports, calibration (parcours seulement : c'est lui qui a un entonnoir) et captures. */
+async function evidence(ctx: Ctx, run: PublicRun): Promise<(HTMLElement | null)[]> {
+  const { doc, t } = ctx;
+  return [
+    h(doc, 'h2', {}, t('run.reports')),
+    reportLinks(ctx, run.id),
+    run.kind === 'journey' ? calibration(ctx, run.id) : null,
+    h(doc, 'h2', {}, t('run.screenshots')),
+    await gallery(ctx, run.id),
+  ];
 }
 
 export async function runView(ctx: Ctx, id: string): Promise<HTMLElement> {
@@ -190,9 +233,7 @@ export async function runView(ctx: Ctx, id: string): Promise<HTMLElement> {
       ['', '→', '', ''],
       transitions.map((x) => [x.from_status ?? '∅', x.to_status, x.actor, x.note ?? '']),
     ),
-    h(doc, 'h2', {}, t('run.reports')),
-    reportLinks(ctx, id),
-    calibration(ctx, id),
+    ...(await evidence(ctx, run)),
     h(doc, 'h2', {}, t('run.inspector')),
     personaSelect,
     inspect,

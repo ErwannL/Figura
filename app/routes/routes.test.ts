@@ -138,6 +138,9 @@ describe('reports API', () => {
     ).toBe('image/jpeg');
     expect((await h.api('GET', `/api/runs/${a}/screenshots/..%2Fx.jpg`, c)).status).toBe(404);
     expect((await h.api('GET', `/api/runs/BAD/screenshots/${shot}`, c)).status).toBe(404);
+    expect((await h.api('GET', `/api/runs/${a}/screenshots`, c)).json.files).toEqual([shot]);
+    expect((await h.api('GET', `/api/runs/${b}/screenshots`, c)).json.files).toEqual([]);
+    expect((await h.api('GET', '/api/runs/BAD/screenshots', c)).status).toBe(404);
     const { rows } = await h.db.query('select body from reports where run_id = $1', [b]);
     rows[0].body.useCases[0].abandonScreenshot = '../../etc/passwd';
     await saveReport(h.db, b, 'funnel', rows[0].body);

@@ -46,6 +46,16 @@ a {
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.gallery img {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
 select {
   min-width: 16rem;
   max-width: 100%;

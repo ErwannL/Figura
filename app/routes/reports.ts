@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Locale } from '../../shared/i18n.js';
 import { buildCalibration, parseAggregates } from '../../worker/reports/calibration.js';
@@ -71,6 +71,16 @@ function reportRoutes1(app: FastifyInstance, cfg: AppConfig, db: Db, h: H): void
     const report = await getReport<AnyReport>(db, id, name);
     if (!report) return reply.code(404).send({ error: 'NOT_FOUND' });
     return send(reply, report, id, format, langOf(req.query), `${id}-${name}`);
+  });
+
+  // Toutes les captures d'un run (explorateur : PNG par état et par anomalie ;
+  // parcours en navigateur : JPEG) : la galerie de la page du run les liste.
+  app.get('/api/runs/:id/screenshots', async (req, reply) => {
+    const { id } = req.params as { id: string };
+    if (!RUN.test(id)) return reply.code(404).send({ error: 'NOT_FOUND' });
+    const dir = join(cfg.screenshotsDir, id);
+    const files = existsSync(dir) ? readdirSync(dir).filter((f) => SHOT.test(f)) : [];
+    return { files: files.sort() };
   });
 
   app.get('/api/runs/:id/screenshots/:file', async (req, reply) => {

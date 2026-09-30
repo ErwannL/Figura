@@ -71,6 +71,11 @@ export const en = {
   'run.transitions': 'Lifecycle',
   'run.reports': 'Reports',
   'run.inspector': 'Persona inspector',
+  'run.screenshots': 'Screenshots',
+  'run.noScreenshots':
+    'No screenshot for this run. The explorer takes one per new screen and per anomaly; a journey takes them in browser mode.',
+  'run.noFunnel':
+    'This run has no funnel report: only journey simulations produce one (an explorer run does not).',
   'run.downloadHtml': 'Download HTML',
   'run.downloadJson': 'Download JSON',
   'run.calibrate': 'Upload real aggregates (CSV or JSON)',
@@ -78,7 +83,8 @@ export const en = {
   'compare.title': 'Change reaction (A/B)',
   'compare.a': 'Run A',
   'compare.b': 'Run B',
-  'compare.none': 'No finished journey run to compare yet. Launch two runs first.',
+  'compare.none':
+    'Nothing to compare yet: only FINISHED journey simulations can be compared (an explorer run has no funnel). Launch two journeys first.',
   'compare.submit': 'Compare',
   'inspector.persona': 'Persona',
   'inspector.time': 'Simulated time',
@@ -265,6 +271,11 @@ export const fr: Record<I18nKey, string> = {
   'run.transitions': 'Cycle de vie',
   'run.reports': 'Rapports',
   'run.inspector': 'Inspecteur de personas',
+  'run.screenshots': 'Captures d’écran',
+  'run.noScreenshots':
+    'Aucune capture pour ce run. L’explorateur en prend une par nouvel écran et par anomalie ; un parcours en prend en mode navigateur.',
+  'run.noFunnel':
+    'Ce run n’a pas de rapport d’entonnoir : seules les simulations de parcours en produisent un (pas l’explorateur).',
   'run.downloadHtml': 'Télécharger en HTML',
   'run.downloadJson': 'Télécharger en JSON',
   'run.calibrate': 'Importer des agrégats réels (CSV ou JSON)',
@@ -272,7 +283,8 @@ export const fr: Record<I18nKey, string> = {
   'compare.title': 'Réaction à un changement (A/B)',
   'compare.a': 'Simulation A',
   'compare.b': 'Simulation B',
-  'compare.none': 'Aucune simulation de parcours terminée à comparer. Lancez-en deux d’abord.',
+  'compare.none':
+    'Rien à comparer pour l’instant : seules les simulations de PARCOURS terminées se comparent (l’explorateur n’a pas d’entonnoir). Lancez d’abord deux parcours.',
   'compare.submit': 'Comparer',
   'inspector.persona': 'Persona',
   'inspector.time': 'Heure simulée',
