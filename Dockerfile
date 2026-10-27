@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # One build, three runtime targets: app (API + UI), worker (Playwright), fake-orqea.
 
-FROM node:22-bookworm-slim AS build
+FROM node:22.23.4-bookworm-slim AS build
 WORKDIR /src
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 COPY package.json package-lock.json ./
@@ -9,7 +9,7 @@ RUN npm ci --ignore-scripts
 COPY . .
 RUN npm run build && npm prune --omit=dev --ignore-scripts
 
-FROM node:22-bookworm-slim AS runtime-base
+FROM node:22.23.4-bookworm-slim AS runtime-base
 WORKDIR /opt/figura
 ENV NODE_ENV=production
 COPY --from=build /src/node_modules ./node_modules
